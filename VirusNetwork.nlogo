@@ -55,6 +55,9 @@ to go
   ]
   spread-virus
   do-virus-checks
+  ; Mejora: mientras la probabilidad de contagiar sea más grande que 0, la probabilidad decrece 0,01 cada tick.
+  if virus-spread-chance > 0
+    [set virus-spread-chance virus-spread-chance - 0.01]
   tick
 end
 
