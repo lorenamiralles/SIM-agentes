@@ -32,16 +32,13 @@ to setup-spatially-clustered-network
   [
     ask one-of turtles
     [
-      let choice (min-one-of (other turtles with [not link-neighbor? myself])
-                   [distance myself])
+      ; Mejora: en vez de buscar el nodo más cerca, escojemos un nodo aleatorio para linkar
+      let choice (one-of (other turtles with [not link-neighbor? myself]))
       if choice != nobody [ create-link-with choice ]
     ]
   ]
   ; make the network look a little prettier
-  repeat 10
-  [
-    layout-spring turtles links 0.3 (world-width / (sqrt number-of-nodes)) 1
-  ]
+  
 end
 
 to go
