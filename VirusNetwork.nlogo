@@ -32,9 +32,11 @@ to setup-spatially-clustered-network
   [
     ask one-of turtles
     [
-      let choice (min-one-of (other turtles with [not link-neighbor? myself])
+      ; comprobamos que no exista enlace desde el otro nodo hasta el nodo propio
+      let choice (min-one-of (other turtles with [not in-link-neighbor? myself])
                    [distance myself])
-      if choice != nobody [ create-link-with choice ]
+      ; si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
+      if choice != nobody [ create-link-to choice ]
     ]
   ]
   ; make the network look a little prettier
