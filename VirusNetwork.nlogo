@@ -82,7 +82,7 @@ end
 
 to spread-virus
   ask turtles with [infected?]
-    ; infecta sólo los vecinos con enlace hacia ellos
+    ; infecta sólo los vecinos salientes
     [ ask out-link-neighbors with [not resistant?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected ] ] ]
