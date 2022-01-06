@@ -27,7 +27,8 @@ to setup-nodes
 end
 
 to setup-spatially-clustered-network
-  let num-links (average-node-degree * number-of-nodes) / 2
+  ; duplica la cantidad de enlaces puesto que ahora son dirigidos
+  let num-links (average-node-degree * number-of-nodes)
   while [count links < num-links ]
   [
     ask one-of turtles
@@ -81,7 +82,8 @@ end
 
 to spread-virus
   ask turtles with [infected?]
-    [ ask link-neighbors with [not resistant?]
+    ; infecta sólo los vecinos con enlace hacia ellos
+    [ ask out-link-neighbors with [not resistant?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected ] ] ]
 end
