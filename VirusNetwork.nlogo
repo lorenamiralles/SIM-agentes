@@ -55,8 +55,9 @@ to go
   ]
   spread-virus
   do-virus-checks
-  ; Mejora: mientras la probabilidad de contagiar sea más grande que 0, la probabilidad decrece 0,01 cada tick.
-  if virus-spread-chance > 0
+  ; Mejora: mientras la probabilidad de contagiar esté entre 0 y 10, la probabilidad puede variar segun el valor
+  ; de la variable global "decrease-increase-prob" del deslizador.
+  if virus-spread-chance > 0 and virus-spread-chance < 10
     [set virus-spread-chance virus-spread-chance + (decrease-increase-prob)]
   tick
 end
