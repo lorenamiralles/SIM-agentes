@@ -35,8 +35,7 @@ to setup-spatially-clustered-network
     [
       ; EXT3: en vez de buscar el nodo más cercano, escogemos un nodo aleatorio para enlazar
       ; EXT1: comprobamos que no exista enlace desde el otro nodo hasta el nodo propio
-      let choice (one-of (other turtles with [not in-link-neighbor? myself])
-                   [distance myself])
+      let choice (one-of (other turtles with [not in-link-neighbor? myself]))
       ; EXT1: si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
       if choice != nobody [ create-link-to choice ]
     ]
