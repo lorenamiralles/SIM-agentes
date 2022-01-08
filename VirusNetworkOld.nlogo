@@ -27,22 +27,21 @@ to setup-nodes
 end
 
 to setup-spatially-clustered-network
-  ; EXT1: duplica la cantidad de enlaces puesto que ahora son dirigidos
-  let num-links (average-node-degree * number-of-nodes)
+  let num-links (average-node-degree * number-of-nodes) / 2
   while [count links < num-links ]
   [
     ask one-of turtles
     [
-      ; EXT3: en vez de buscar el nodo más cercano, escogemos un nodo aleatorio para enlazar
-      ; EXT1: comprobamos que no exista enlace desde el otro nodo hasta el nodo propio
-      let choice (one-of (other turtles with [not in-link-neighbor? myself])
+      let choice (min-one-of (other turtles with [not link-neighbor? myself])
                    [distance myself])
-      ; EXT1: si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
-      if choice != nobody [ create-link-to choice ]
+      if choice != nobody [ create-link-with choice ]
     ]
   ]
   ; make the network look a little prettier
-  
+  repeat 10
+  [
+    layout-spring turtles links 0.3 (world-width / (sqrt number-of-nodes)) 1
+  ]
 end
 
 to go
@@ -56,9 +55,8 @@ to go
   ]
   spread-virus
   do-virus-checks
-  ; Mejora: mientras la probabilidad de contagiar esté entre 0 y 10, la probabilidad puede variar segun el valor
-  ; de la variable global "decrease-increase-prob" del deslizador.
-  if virus-spread-chance > 0 and virus-spread-chance < 10
+  ; Mejora: mientras la probabilidad de contagiar sea más grande que 0, la probabilidad decrece 0,01 cada tick.
+  if virus-spread-chance > 0
     [set virus-spread-chance virus-spread-chance + (decrease-increase-prob)]
   tick
 end
@@ -84,8 +82,7 @@ end
 
 to spread-virus
   ask turtles with [infected?]
-    ; infecta sólo los vecinos salientes
-    [ ask out-link-neighbors with [not resistant?]
+    [ ask link-neighbors with [not resistant?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected ] ] ]
 end
@@ -271,7 +268,7 @@ initial-outbreak-size
 initial-outbreak-size
 1
 number-of-nodes
-3.0
+4.0
 1
 1
 NIL
