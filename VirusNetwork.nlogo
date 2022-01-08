@@ -216,9 +216,9 @@ NIL
 
 PLOT
 5
-325
+349
 260
-489
+513
 Network Status
 time
 % of nodes
