@@ -27,14 +27,17 @@ to setup-nodes
 end
 
 to setup-spatially-clustered-network
-  let num-links (average-node-degree * number-of-nodes) / 2
+  ; duplica la cantidad de enlaces puesto que ahora son dirigidos
+  let num-links (average-node-degree * number-of-nodes)
   while [count links < num-links ]
   [
     ask one-of turtles
     [
-      let choice (min-one-of (other turtles with [not link-neighbor? myself])
+      ; comprobamos que no exista enlace desde el otro nodo hasta el nodo propio
+      let choice (min-one-of (other turtles with [not in-link-neighbor? myself])
                    [distance myself])
-      if choice != nobody [ create-link-with choice ]
+      ; si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
+      if choice != nobody [ create-link-to choice ]
     ]
   ]
   ; make the network look a little prettier
@@ -83,7 +86,8 @@ end
 
 to spread-virus
   ask turtles with [infected?]
-    [ ask link-neighbors with [not resistant?]
+    ; infecta sólo los vecinos salientes
+    [ ask out-link-neighbors with [not resistant?]
         [ if random-float 100 < virus-spread-chance
             [ become-infected ] ] ]
 end
@@ -212,9 +216,9 @@ NIL
 
 PLOT
 5
-349
+325
 260
-513
+489
 Network Status
 time
 % of nodes
