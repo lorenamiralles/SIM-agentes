@@ -2,6 +2,7 @@ turtles-own
 [
   infected?           ;; if true, the turtle is infectious
   resistant?          ;; if true, the turtle can't be infected
+  protected?          ;; cierto si el nodo tiene antivirus
   virus-check-timer   ;; number of ticks since this turtle's last virus-check
 ]
 
@@ -9,41 +10,45 @@ to setup
   clear-all
   setup-nodes
   setup-spatially-clustered-network
-  ask n-of initial-outbreak-size turtles
+  ask n-of INITIAL-OUTBREAK-SIZE turtles
     [ become-infected ]
+  ; elige n nodos aleatorios para que sean protegidos por el AV
+  ; según el INITIAL-AV-OUTBREAK-SIZE elegido por el usuario
+  ask n-of INITIAL-AV-OUTBREAK-SIZE turtles with [not infected?]
+    [become-protected]
   ask links [ set color white ]
   reset-ticks
 end
 
 to setup-nodes
   set-default-shape turtles "circle"
-  create-turtles number-of-nodes
+  create-turtles NUMBER-OF-NODES
   [
     ; for visual reasons, we don't put any nodes *too* close to the edges
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
     become-susceptible
-    set virus-check-timer random virus-check-frequency
+    set virus-check-timer random VIRUS-CHECK-FREQUENCY
   ]
 end
 
 to setup-spatially-clustered-network
   ; duplica la cantidad de enlaces puesto que ahora son dirigidos
-  let num-links (average-node-degree * number-of-nodes)
+  let num-links (AVERAGE-NODE-DEGREE * NUMBER-OF-NODES)
   while [count links < num-links ]
   [
     ask one-of turtles
     [
-      ; comprobamos que no exista enlace desde el otro nodo hasta el nodo propio
+      ; elegimos un nodo CHOICE sin enlace entrante desde el nodo propio hasta CHOICE
       let choice (min-one-of (other turtles with [not in-link-neighbor? myself])
                    [distance myself])
-      ; si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
+      ; si existe CHOICE, creamos un enlace saliente desde el nodo propio hasta CHOICE
       if choice != nobody [ create-link-to choice ]
     ]
   ]
   ; make the network look a little prettier
   repeat 10
   [
-    layout-spring turtles links 0.3 (world-width / (sqrt number-of-nodes)) 1
+    layout-spring turtles links 0.3 (world-width / (sqrt NUMBER-OF-NODES)) 1
   ]
 end
 
@@ -53,47 +58,68 @@ to go
   ask turtles
   [
      set virus-check-timer virus-check-timer + 1
-     if virus-check-timer >= virus-check-frequency
+     if virus-check-timer >= VIRUS-CHECK-FREQUENCY
        [ set virus-check-timer 0 ]
   ]
   spread-virus
   do-virus-checks
+  spread-antivirus
   tick
 end
 
 to become-infected  ;; turtle procedure
   set infected? true
   set resistant? false
+  set protected? false ; no tiene antivirus
   set color red
 end
 
 to become-susceptible  ;; turtle procedure
   set infected? false
   set resistant? false
+  set protected? false ; no tiene antivirus
   set color blue
 end
 
 to become-resistant  ;; turtle procedure
   set infected? false
   set resistant? true
+  set protected? false ; no tiene antivirus
   set color gray
   ask my-links [ set color gray - 2 ]
 end
 
+; el nodo pasa a ser resistente, no infectado y protegido por el AV
+to become-protected  ;; turtle procedure
+  become-resistant ; reusa el procedimiento
+  set protected? true
+  set color green
+end
+
 to spread-virus
   ask turtles with [infected?]
-    ; infecta sólo los vecinos salientes
+    ; infecta sólo los vecinos salientes no resistentes
     [ ask out-link-neighbors with [not resistant?]
-        [ if random-float 100 < virus-spread-chance
+        [ if random-float 100 < VIRUS-SPREAD-CHANCE
             [ become-infected ] ] ]
+end
+
+; los nodos protegidos esparcen el AV con probabilidad ANTIVIRUS-SPREAD-CHANCE
+; hacia los vecinos salientes, que quedan protegidos
+to spread-antivirus
+  ask turtles with [protected?]
+    ; protege sólo los vecinos salientes no protegidos
+    [ ask out-link-neighbors with [not protected?]
+        [ if random-float 100 < ANTIVIRUS-SPREAD-CHANCE
+            [ become-protected ] ] ]
 end
 
 to do-virus-checks
   ask turtles with [infected? and virus-check-timer = 0]
   [
-    if random 100 < recovery-chance
+    if random 100 < RECOVERY-CHANCE
     [
-      ifelse random 100 < gain-resistance-chance
+      ifelse random 100 < GAIN-RESISTANCE-CHANCE
         [ become-resistant ]
         [ become-susceptible ]
     ]
@@ -136,8 +162,8 @@ SLIDER
 280
 230
 313
-gain-resistance-chance
-gain-resistance-chance
+GAIN-RESISTANCE-CHANCE
+GAIN-RESISTANCE-CHANCE
 0.0
 100
 5.0
@@ -151,8 +177,8 @@ SLIDER
 245
 230
 278
-recovery-chance
-recovery-chance
+RECOVERY-CHANCE
+RECOVERY-CHANCE
 0.0
 10.0
 5.0
@@ -166,8 +192,8 @@ SLIDER
 175
 230
 208
-virus-spread-chance
-virus-spread-chance
+VIRUS-SPREAD-CHANCE
+VIRUS-SPREAD-CHANCE
 0.0
 10.0
 2.5
@@ -229,14 +255,15 @@ PENS
 "susceptible" 1.0 0 -13345367 true "" "plot (count turtles with [not infected? and not resistant?]) / (count turtles) * 100"
 "infected" 1.0 0 -2674135 true "" "plot (count turtles with [infected?]) / (count turtles) * 100"
 "resistant" 1.0 0 -7500403 true "" "plot (count turtles with [resistant?]) / (count turtles) * 100"
+"protected" 1.0 0 -10170829 true "" "plot (count turtles with [protected?]) / (count turtles) * 100"
 
 SLIDER
 25
 15
 230
 48
-number-of-nodes
-number-of-nodes
+NUMBER-OF-NODES
+NUMBER-OF-NODES
 10
 300
 150.0
@@ -250,8 +277,8 @@ SLIDER
 210
 230
 243
-virus-check-frequency
-virus-check-frequency
+VIRUS-CHECK-FREQUENCY
+VIRUS-CHECK-FREQUENCY
 1
 20
 1.0
@@ -265,10 +292,10 @@ SLIDER
 85
 230
 118
-initial-outbreak-size
-initial-outbreak-size
+INITIAL-OUTBREAK-SIZE
+INITIAL-OUTBREAK-SIZE
 1
-number-of-nodes
+NUMBER-OF-NODES
 3.0
 1
 1
@@ -280,11 +307,41 @@ SLIDER
 50
 230
 83
-average-node-degree
-average-node-degree
+AVERAGE-NODE-DEGREE
+AVERAGE-NODE-DEGREE
 1
-number-of-nodes - 1
+NUMBER-OF-NODES - 1
 6.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+763
+12
+992
+45
+ANTIVIRUS-SPREAD-CHANCE
+ANTIVIRUS-SPREAD-CHANCE
+0
+2.50
+1.25
+0.01
+1
+%
+HORIZONTAL
+
+SLIDER
+763
+47
+971
+80
+INITIAL-AV-OUTBREAK-SIZE
+INITIAL-AV-OUTBREAK-SIZE
+0
+NUMBER-OF-NODES
+1.0
 1
 1
 NIL
@@ -305,6 +362,14 @@ Infected nodes are not immediately aware that they are infected.  Only every so 
 If a node does recover, there is some probability that it will become resistant to this virus in the future (given by the GAIN-RESISTANCE-CHANCE slider).
 
 When a node becomes resistant, the links between it and its neighbors are darkened, since they are no longer possible vectors for spreading the virus.
+
+### EXTENSIÓN 4: ANTIVIRUS
+
+El usuario puede configurar mediante INITIAL-AV-OUTBREAK-SIZE el número de nodos que tendrán antivirus en el inicio. El parámetro "protected?" indica si un nodo presenta AV o no.
+
+En cada instante, los nodos protegidos (con AV) tienen cierta probabilidad de transmitir el AV a los nodos vecinos salientes (enlaces desde el propio nodo hacia el vecino). Cuando se transmite el AV, el nodo vecino pasa a estar protegido. El usuario puede configurar la probabilidad de transmitir el AV mediante el deslizador ANTIVIRUS-SPREAD-CHANCE.
+
+Dado que el AV aparece desde el inicio y los nodos protegidos no podrán infectarse en el futuro, la expansión del AV es mucho más rápida que la del virus, por lo que hemos reducido el porcentaje respecto al de VIRUS-SPREAD-CHANCE.
 
 ## HOW TO USE IT
 
