@@ -411,11 +411,13 @@ Los enlaces que se crean entre nodos tienen una única dirección. Esto causa qu
 
 ### EXTENSIÓN 2: PROBABILIDAD DECRECIENTE DE PROPAGACIÓN DEL VIRUS
 
-El usuario puede configurar mediante DECREASE-INCREASE-PROB
+El usuario puede configurar mediante el deslizador VIRUS-SPREAD-CHANCE-VARIATION la variable VIRUS-SPREAD-CHANCE. Esto provoca que la probabilidad de que el virus se esparza incremente o decremente a lo largo del tiempo de ejecución.
+
+Para ver como va variando el valor de la variable VIRUS-SPREAD-CHANCE hemos añadido un gráfico (Virus-spread-chance) en el que se puede ver su valor en tiempo real.
 
 ### EXTENSIÓN 3: VECINOS LEJANOS
 
-Un nodo puede enlazarse con cualquier otro nodo independientemente de la distancia a la que se encuentre.
+A diferencia del modelo inicial que solo enlazaba los nodos con los otros nodos más cercanos, este modelo enlaza nodos de forma aleatoria independientemente de la distancia entre ellos.
 
 ### EXTENSIÓN 4: ANTIVIRUS
 
