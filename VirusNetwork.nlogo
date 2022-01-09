@@ -405,6 +405,18 @@ If a node does recover, there is some probability that it will become resistant 
 
 When a node becomes resistant, the links between it and its neighbors are darkened, since they are no longer possible vectors for spreading the virus.
 
+### EXTENSIÓN 1: ENLACES DIRIGIDOS
+
+Los enlaces que se crean entre nodos tienen una única dirección. Esto causa que el virus y el antivirus sólo se puedan propagar desde un nodo hasta su vecino saliente.
+
+### EXTENSIÓN 2: PROBABILIDAD DECRECIENTE DE PROPAGACIÓN DEL VIRUS
+
+El usuario puede configurar mediante DECREASE-INCREASE-PROB
+
+### EXTENSIÓN 3: VECINOS LEJANOS
+
+Un nodo puede enlazarse con cualquier otro nodo independientemente de la distancia a la que se encuentre.
+
 ### EXTENSIÓN 4: ANTIVIRUS
 
 El usuario puede configurar mediante INITIAL-AV-OUTBREAK-SIZE el número de nodos que tendrán antivirus en el inicio. El parámetro "protected?" indica si un nodo presenta AV o no.
