@@ -6,10 +6,18 @@ turtles-own
   virus-check-timer   ;; number of ticks since this turtle's last virus-check
 ]
 
+; EXT2: Definimos nueva variable global para modificar el valor del virus-spread-chance según el VIRUS-SPREAD-CHANCE-VARITATION
+globals
+[
+  new-virus-spread-chance
+]
+
 to setup
   clear-all
   setup-nodes
   setup-spatially-clustered-network
+  ; EXT2: inicializamos la nueva variable global
+  set new-virus-spread-chance virus-spread-chance
   ask n-of INITIAL-OUTBREAK-SIZE turtles
     [ become-infected ]
   ; EXT4: elige n nodos aleatorios para que sean protegidos por el AV
@@ -60,9 +68,9 @@ to go
   spread-virus
   do-virus-checks
   ; EXT2: mientras la probabilidad de contagiar esté entre 0 y 10, la probabilidad puede variar según
-  ; el valor de la variable global DECREASE-INCREASE-PROB del deslizador.
-  if virus-spread-chance > 0 and virus-spread-chance < 10
-    [set virus-spread-chance virus-spread-chance + (DECREASE-INCREASE-PROB)]
+  ; el valor de la variable global VIRUS-SPREAD-CHANCE-VARIATION del deslizador.
+  if (new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)) > 0 and (new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)) < 10
+    [set new-virus-spread-chance new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)]
   ; EXT4: transmite el AV a los nodos enlazados
   spread-antivirus
   tick
@@ -101,7 +109,7 @@ to spread-virus
   ask turtles with [infected?]
     ; infecta sólo los vecinos salientes no resistentes
     [ ask out-link-neighbors with [not resistant?]
-        [ if random-float 100 < VIRUS-SPREAD-CHANCE
+        [ if random-float 100 < new-virus-spread-chance
             [ become-infected ] ] ]
 end
 
@@ -238,10 +246,10 @@ NIL
 0
 
 PLOT
-5
-349
-260
-513
+4
+316
+259
+480
 Network Status
 time
 % of nodes
@@ -319,12 +327,12 @@ NIL
 HORIZONTAL
 
 SLIDER
-25
-314
-230
-347
-DECREASE-INCREASE-PROB
-DECREASE-INCREASE-PROB
+762
+84
+999
+117
+VIRUS-SPREAD-CHANCE-VARIATION
+VIRUS-SPREAD-CHANCE-VARIATION
 -0.10
 0.10
 0.0
@@ -342,7 +350,7 @@ ANTIVIRUS-SPREAD-CHANCE
 ANTIVIRUS-SPREAD-CHANCE
 0
 2.50
-1.25
+1.5
 0.01
 1
 %
@@ -357,11 +365,29 @@ INITIAL-AV-OUTBREAK-SIZE
 INITIAL-AV-OUTBREAK-SIZE
 0
 NUMBER-OF-NODES
-1.0
+0.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+762
+123
+962
+273
+Virus-spread-chance
+time
+% of virus spread chance
+0.0
+52.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot NEW-VIRUS-SPREAD-CHANCE"
 
 @#$#@#$#@
 ## WHAT IS IT?
