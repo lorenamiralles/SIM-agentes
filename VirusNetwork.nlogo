@@ -1,12 +1,13 @@
 turtles-own
 [
-  infected?           ;; if true, the turtle is infectious
-  resistant?          ;; if true, the turtle can't be infected
-  protected?          ;; cierto si el nodo tiene antivirus
-  virus-check-timer   ;; number of ticks since this turtle's last virus-check
+  infected?
+  resistant?
+  protected?          ; EXT4: Cierto si el nodo está protegido por el antivirus
+  virus-check-timer
 ]
 
-; EXT2: Definimos nueva variable global para modificar el valor del virus-spread-chance según el VIRUS-SPREAD-CHANCE-VARITATION
+; EXT2: Definimos nueva variable global para modificar el valor del
+; VIRUS-SPREAD-CHANCE según el VIRUS-SPREAD-CHANCE-VARITATION
 globals
 [
   new-virus-spread-chance
@@ -17,7 +18,7 @@ to setup
   setup-nodes
   setup-spatially-clustered-network
   ; EXT2: inicializamos la nueva variable global
-  set new-virus-spread-chance virus-spread-chance
+  set new-virus-spread-chance VIRUS-SPREAD-CHANCE
   ask n-of INITIAL-OUTBREAK-SIZE turtles
     [ become-infected ]
   ; EXT4: elige n nodos aleatorios para que sean protegidos por el AV
@@ -32,7 +33,6 @@ to setup-nodes
   set-default-shape turtles "circle"
   create-turtles NUMBER-OF-NODES
   [
-    ; for visual reasons, we don't put any nodes *too* close to the edges
     setxy (random-xcor * 0.95) (random-ycor * 0.95)
     become-susceptible
     set virus-check-timer random VIRUS-CHECK-FREQUENCY
@@ -40,17 +40,16 @@ to setup-nodes
 end
 
 to setup-spatially-clustered-network
-  ; EXT1: duplica la cantidad de enlaces puesto que ahora son dirigidos
+  ; EXT1: Duplica la cantidad de enlaces puesto que ahora son dirigidos
   let num-links (AVERAGE-NODE-DEGREE * NUMBER-OF-NODES)
   while [count links < num-links ]
   [
     ask one-of turtles
     [
-      ; EXT3: en vez de buscar el nodo más cercano, escogemos un nodo aleatorio para enlazar
-      ; EXT1: elegimos un nodo CHOICE sin enlace entrante desde el nodo propio hasta CHOICE
+      ; EXT3: En vez de buscar el nodo más cercano, escogemos un nodo aleatorio para enlazar
+      ; EXT1: Elige un nodo que no esté ya enlazado con enlace entrante (desde MYSELF hasta CHOICE)
       let choice (one-of (other turtles with [not in-link-neighbor? myself]))
-      ; EXT1: si existe un nodo, creamos el enlace desde el nodo propio hasta el otro
-      ; EXT1: si existe CHOICE, creamos un enlace saliente desde el nodo propio hasta CHOICE
+      ; EXT1: Si existe CHOICE, creamos un enlace saliente desde MYSELF hasta CHOICE
       if choice != nobody [ create-link-to choice ]
     ]
   ]
@@ -69,55 +68,56 @@ to go
   do-virus-checks
   ; EXT2: mientras la probabilidad de contagiar esté entre 0 y 10, la probabilidad puede variar según
   ; el valor de la variable global VIRUS-SPREAD-CHANCE-VARIATION del deslizador.
-  if (new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)) > 0 and (new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)) < 10
-    [set new-virus-spread-chance new-virus-spread-chance + (VIRUS-SPREAD-CHANCE-VARIATION)]
+  if (new-virus-spread-chance + VIRUS-SPREAD-CHANCE-VARIATION) > 0 and (new-virus-spread-chance + VIRUS-SPREAD-CHANCE-VARIATION) < 10
+    [set new-virus-spread-chance new-virus-spread-chance + VIRUS-SPREAD-CHANCE-VARIATION]
   ; EXT4: transmite el AV a los nodos enlazados
   spread-antivirus
   tick
 end
 
-to become-infected  ;; turtle procedure
+to become-infected
   set infected? true
   set resistant? false
-  set protected? false ; no tiene antivirus
+  set protected? false ; EXT4: No está protegido por el antivirus
   set color red
 end
 
-to become-susceptible  ;; turtle procedure
+to become-susceptible
   set infected? false
   set resistant? false
-  set protected? false ; no tiene antivirus
+  set protected? false ; EXT4: No está protegido por el antivirus
   set color blue
 end
 
-to become-resistant  ;; turtle procedure
+to become-resistant
   set infected? false
   set resistant? true
-  set protected? false ; no tiene antivirus
+  set protected? false ; EXT4: No está protegido por el antivirus
   set color gray
   ask my-links [ set color gray - 2 ]
 end
 
-; el nodo pasa a ser resistente, no infectado y protegido por el AV
-to become-protected  ;; turtle procedure
-  become-resistant ; reusa el procedimiento
+; EXT4: El nodo pasa a ser resistente, no infectado y protegido por el AV
+to become-protected
+  become-resistant ; EXT4: Reusa el procedimiento
   set protected? true
   set color green
 end
 
 to spread-virus
   ask turtles with [infected?]
-    ; infecta sólo los vecinos salientes no resistentes
+    ; EXT4: Infecta sólo los vecinos salientes no resistentes
     [ ask out-link-neighbors with [not resistant?]
+        ; EXT2: Usa la probabilidad de propagación modificada
         [ if random-float 100 < new-virus-spread-chance
             [ become-infected ] ] ]
 end
 
-; los nodos protegidos esparcen el AV con probabilidad ANTIVIRUS-SPREAD-CHANCE
+; EXT4: Los nodos protegidos esparcen el AV con probabilidad ANTIVIRUS-SPREAD-CHANCE
 ; hacia los vecinos salientes, que quedan protegidos
 to spread-antivirus
   ask turtles with [protected?]
-    ; protege sólo los vecinos salientes no protegidos
+    ; EXT4: Protege sólo los vecinos salientes no protegidos
     [ ask out-link-neighbors with [not protected?]
         [ if random-float 100 < ANTIVIRUS-SPREAD-CHANCE
             [ become-protected ] ] ]
@@ -407,7 +407,9 @@ When a node becomes resistant, the links between it and its neighbors are darken
 
 ### EXTENSIÓN 1: ENLACES DIRIGIDOS
 
-Los enlaces que se crean entre nodos tienen una única dirección. Esto causa que el virus y el antivirus sólo se puedan propagar desde un nodo hasta su vecino saliente.
+Los enlaces que se crean entre nodos tienen una única dirección. Esto causa que el virus y el antivirus sólo se puedan propagar desde un nodo hasta su vecino saliente. Debido a que ahora los enlaces son dirigidos, hemos duplicado la cantidad de enlaces para que haya el mismo nivel de conectividad que con enlaces no dirigidos.
+
+Además, hemos limitado el grado de conectividad a 1/4 del NUMBER-OF-NODES, puesto que la computación de los enlaces era muy lenta.
 
 ### EXTENSIÓN 2: PROBABILIDAD DECRECIENTE DE PROPAGACIÓN DEL VIRUS
 
